@@ -99,7 +99,7 @@ diabetes-prediction/
 ├── model_training.ipynb      # Training notebook
 ├── prediction_script.py      # Standalone prediction script
 └── README.md
-```
+
 ---
 🌍 Real-World Relevance
 This project aligns with digital health trends and can be extended into:
