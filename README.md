@@ -1,118 +1,73 @@
-🩺 Diabetes Prediction System
-![Python](https://img.shields.io/badge/Python-3.x-3B8BD4?style=flat-square&logo=python&logoColor=white)
-![Scikit-learn](https://img.shields.io/badge/Scikit--learn-ML-BA7517?style=flat-square&logo=scikit-learn&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-1D9E75?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Baseline%20Model-E24B4A?style=flat-square)
+# Type 2 Diabetes Risk Model (Pima Indians Diabetes Data)
 
+A leakage-free, calibrated risk model for diabetes in 768 Pima Indian women. It handles the dataset's impossible zero values, compares logistic regression with a linear SVM and gradient boosting under repeated cross-validation, and reports clinically relevant operating points and adjusted odds ratios.
 
-> A supervised machine learning pipeline using Support Vector Machines to identify diabetes risk from clinical features — supporting early screening and digital health initiatives.
+Reproduced by [`notebooks/diabetes_risk_model.ipynb`](notebooks/diabetes_risk_model.ipynb).
 
+> Research and education only. This isn't a clinical screening tool.
 
-📊 Dataset
-Property	Detail
-Source	Pima Indians Diabetes Dataset
-Samples	768 patients
-Features	8 clinical variables
-Target	`Outcome` — `0` Non-diabetic · `1` Diabetic
+## Results
 
+**Discrimination and overall accuracy** (stratified 5-fold CV ×20; imputation and scaling fit inside folds):
 
-🧠 Project Pipeline
+| Model | ROC-AUC (95% CI) | PR-AUC | Brier | Accuracy @0.5 |
+|---|---|---|---|---|
+| **Logistic regression (primary)** | **0.832** (0.807–0.864) | 0.708 | 0.158 | 0.771 |
+| Linear SVM (original model family) | 0.835 (0.807–0.865) | 0.713 | 0.156 | 0.772 |
+| Gradient boosting | 0.826 (0.793–0.853) | 0.690 | 0.162 | 0.759 |
 
-Raw Data → Preprocessing → Train SVM → Evaluate → Predict
-  01            02             03          04         05
+Baselines: Brier 0.227 for predicting the 34.9% prevalence for everyone; accuracy 0.651 for always predicting "no diabetes". **Model complexity doesn't help.**
 
-Step	Description
-01 · Load Data	Read `diabetes.csv` using Pandas
-02 · Preprocess	Drop target col, apply `StandardScaler`, stratified train/test split
-03 · Train SVM	Fit `SVC(kernel='linear')` on scaled training data
-04 · Evaluate	Measure accuracy on training and held-out test sets
-05 · Predict	Standardize new input, run inference, return outcome label
+**Operating points** (logistic regression, held-out women, mean of 20 repeats):
 
-⚙️ Methodology
-Algorithm: Support Vector Machine (SVM) — Linear Kernel  
-Chosen for its effectiveness on small-to-medium structured tabular datasets with clear class boundaries.
-Preprocessing steps:
-Removed `Outcome` target column from feature matrix
-Applied `StandardScaler` for feature normalization
-Used stratified split to preserve class balance across train/test sets
+| | Sensitivity | Specificity | PPV | NPV |
+|---|---|---|---|---|
+| Threshold 0.5 | 0.572 | 0.878 | 0.716 | 0.793 |
+| Threshold set in training folds for 85% sensitivity | **0.853** | 0.626 | 0.550 | **0.888** |
 
+At the default threshold the model misses **43% of women with diabetes**. The earlier version's 77% accuracy figure hid this. For screening, the sensitivity-targeted threshold met its target on unseen data.
 
-📈 Model Performance
-Split	Accuracy
-Training	78.6%
-Test	77.3%
-> ⚠️ Accuracy alone is not sufficient for clinical deployment. Future iterations will report ROC-AUC, F1-score, and confusion matrix breakdowns.
+![Calibration](reports/figures/calibration.png)
 
-🔍 Key Predictors
-Feature importance based on domain knowledge and SVM weight analysis:
-```
-Glucose          ████████████████████  High
-BMI              ███████████████       Medium
-Age              ████████████          Medium
-Diabetes Pedigree ██████████           Moderate
-Insulin          ████████              Moderate
-Blood Pressure   █████                 Low
+**Adjusted odds ratios per SD** (n = 724 complete cases; insulin and skinfold excluded for missingness): glucose 2.95 (2.38–3.67), BMI 1.87 (1.51–2.31), pregnancies 1.49 (1.19–1.85), diabetes pedigree 1.38 (1.13–1.68), age 1.22 (0.97–1.53), diastolic BP 0.90 (0.73–1.10). A four-variable model (glucose, BMI, age, pedigree) reaches ROC-AUC 0.827.
 
+## Methods
 
+- **Zeros are missing values:** Glucose (5), BloodPressure (35), SkinThickness (227), Insulin (374) and BMI (11) zeros are converted to missing, then median-imputed with missingness indicators **inside each training fold**.
+- **Validation:** repeated stratified CV with out-of-fold probabilities, percentile bootstrap CIs, Brier score and a calibration curve.
+- **Threshold selection:** a threshold for 85% sensitivity is chosen by inner CV on each training fold and applied unchanged to the test fold.
 
-🔁 Prediction Workflow
-Input — `(Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigree, Age)`
-```python
-input_data = (10, 125, 70, 26, 115, 31.1, 0.205, 41)
+## Limitations
 
-# Standardize
-input_array = np.asarray(input_data).reshape(1, -1)
-std_data = scaler.transform(input_array)
+- **One specific population** (Pima Indian women aged 21 or older), with no external validation.
+- **`Glucose` is the 2-hour oral glucose tolerance test value**, which is part of the diagnostic criterion, so this is closer to diagnostic classification than to predicting future diabetes.
+- Insulin is missing for 49% of women and skinfold for 30%. Multiple imputation would be more rigorous than median imputation.
 
-# Predict
-prediction = classifier.predict(std_data)
+## Reproduce
 
-Output:
-
-✓ Not Diabetic   (Outcome = 0)
+```bash
+python -m venv .venv
+.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+pytest
+jupyter nbconvert --to notebook --execute --inplace notebooks/diabetes_risk_model.ipynb
 ```
 
-⚠️ Limitations
-Presence of unrealistic zero values in features like Glucose and BMI
-Accuracy alone is insufficient for clinical use
-Small dataset size (768 samples) limits generalizability
-No model interpretability layer (e.g. SHAP values)
--
-🔧 Future Improvements
-[ ] Handle missing/zero values using median or KNN imputation
-[ ] Implement advanced models — Random Forest, XGBoost
-[ ] Add evaluation metrics — ROC-AUC, F1-score, confusion matrix
-[ ] Build a Streamlit web app for real-time prediction
-[ ] Integrate with retinal imaging AI (multimodal approach)
-[ ] Add SHAP interpretability layer for clinical explainability
----
-🧰 Tech Stack
-![Python](https://img.shields.io/badge/-Python-3B8BD4?style=flat-square&logo=python&logoColor=white)
-![Pandas](https://img.shields.io/badge/-Pandas-1D9E75?style=flat-square&logo=pandas&logoColor=white)
-![NumPy](https://img.shields.io/badge/-NumPy-1D9E75?style=flat-square&logo=numpy&logoColor=white)
-![Scikit-learn](https://img.shields.io/badge/-Scikit--learn-BA7517?style=flat-square&logo=scikit-learn&logoColor=white)
----
-📁 Project Structure
-```
-diabetes-prediction/
-├── diabetes.csv              # Pima Indians dataset
-├── model_training.ipynb      # Training notebook
-├── prediction_script.py      # Standalone prediction script
-└── README.md
+Data comes from OpenML (dataset 37, licence "Public") and is included with checksums; see [`data/README.md`](data/README.md). Tested with Python 3.13. Notebook runtime is about 2 minutes on a laptop (nested threshold selection for three models × 20 repeats).
 
----
-🌍 Real-World Relevance
-This project aligns with digital health trends and can be extended into:
-Early diabetes screening tools for primary care
-Clinical decision support systems for practitioners
-Population health analytics platforms
----
-🏁 Conclusion
-This project demonstrates a practical application of machine learning in healthcare. The SVM baseline achieves ~77% test accuracy on a small structured dataset. Further improvements — better preprocessing, ensemble models, and richer evaluation metrics — are required before any real-world clinical use.
----
-👤 Author
-Prince Kwarteng Amaning  
-MS Data Science — University of Michigan–Dearborn  
-Background in Dentistry & Public Health
----
-Built with Python · Scikit-learn · Pandas · NumPy
+## Changes from the earlier version
+
+The previous notebook:
+- kept impossible zeros as real values;
+- fit the scaler on all data before splitting;
+- reported only single-split accuracy;
+- gave a hand-drawn "Key Predictors" bar chart that no analysis produced;
+- showed an MIT badge without a LICENSE file.
+
+All of this has been replaced with the analysis above. The repository name keeps its original spelling (`Diabtetes`) because renaming is a separate decision. GitHub redirects old URLs after a rename.
+
+## Author
+
+Prince Kwarteng Amaning. MS Data Science, University of Michigan–Dearborn. Background in dentistry and public health.
+
+License: MIT (code). Data: Pima Indians Diabetes Database (NIDDK), via OpenML.
