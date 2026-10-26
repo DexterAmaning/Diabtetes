@@ -55,7 +55,7 @@ pytest
 jupyter nbconvert --to notebook --execute --inplace notebooks/diabetes_risk_model.ipynb
 ```
 
-Data comes from OpenML (dataset 37, licence "Public") and is included with checksums; see [`data/README.md`](data/README.md). Tested with Python 3.13. Notebook runtime is about 2 minutes on a laptop (nested threshold selection for three models × 20 repeats).
+Data comes from OpenML (dataset 37) and is included with checksums; see [`data/README.md`](data/README.md). Tested with Python 3.13. Notebook runtime is about 2 minutes on a laptop (nested threshold selection for three models × 20 repeats).
 
 On every push, GitHub Actions runs the tests with network access blocked, static checks (pyflakes, compilation) and a full notebook re-execution; see [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The tests also check that every number in this README is a rounding of a value the notebook printed.
 

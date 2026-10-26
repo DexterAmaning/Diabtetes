@@ -9,7 +9,7 @@
 | Donor | Vincent Sigillito, Johns Hopkins University Applied Physics Laboratory (UCI, 1990) |
 | Source used | OpenML dataset 37, https://www.openml.org/d/37 |
 | Direct file | https://openml.org/data/v1/download/37/diabetes.arff |
-| Licence (OpenML) | Public |
+| Licence | None named. OpenML's licence field reads only "Public", which isn't a named licence, so check the terms before reusing the data elsewhere |
 | Downloaded | 2026-10-24 |
 | MD5 | `3cbaa3e54586aa88cf6aacb4033e4470` (matches the checksum published in OpenML's metadata) |
 | SHA-256 | `4eddd5b2b64679e8888348e306520a393d6a28e1ddc9643cfb76fc5d912d6d40` |
