@@ -1,5 +1,7 @@
 # Type 2 Diabetes Risk Model (Pima Indians Diabetes Data)
 
+[![CI](https://github.com/DexterAmaning/Diabtetes/actions/workflows/ci.yml/badge.svg)](https://github.com/DexterAmaning/Diabtetes/actions/workflows/ci.yml)
+
 A leakage-free, calibrated risk model for diabetes in 768 Pima Indian women. It handles the dataset's impossible zero values, compares logistic regression with a linear SVM and gradient boosting under repeated cross-validation, and reports clinically relevant operating points and adjusted odds ratios.
 
 Reproduced by [`notebooks/diabetes_risk_model.ipynb`](notebooks/diabetes_risk_model.ipynb).
@@ -29,7 +31,7 @@ At the default threshold the model misses **43% of women with diabetes**. The ea
 
 ![Calibration](reports/figures/calibration.png)
 
-**Adjusted odds ratios per SD** (n = 724 complete cases; insulin and skinfold excluded for missingness): glucose 2.95 (2.38–3.67), BMI 1.87 (1.51–2.31), pregnancies 1.49 (1.19–1.85), diabetes pedigree 1.38 (1.13–1.68), age 1.22 (0.97–1.53), diastolic BP 0.90 (0.73–1.10). A four-variable model (glucose, BMI, age, pedigree) reaches ROC-AUC 0.827.
+**Adjusted odds ratios per SD** (n = 724 complete cases; insulin and skinfold excluded for missingness): glucose 2.95 (2.37–3.67), BMI 1.87 (1.51–2.31), pregnancies 1.49 (1.19–1.85), diabetes pedigree 1.38 (1.13–1.68), age 1.22 (0.97–1.53), diastolic BP 0.90 (0.73–1.10). A four-variable model (glucose, BMI, age, pedigree) reaches ROC-AUC 0.827.
 
 ## Methods
 
@@ -54,6 +56,8 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/diabetes_risk_mode
 ```
 
 Data comes from OpenML (dataset 37, licence "Public") and is included with checksums; see [`data/README.md`](data/README.md). Tested with Python 3.13. Notebook runtime is about 2 minutes on a laptop (nested threshold selection for three models × 20 repeats).
+
+On every push, GitHub Actions runs the tests with network access blocked, static checks (pyflakes, compilation) and a full notebook re-execution; see [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The tests also check that every number in this README is a rounding of a value the notebook printed.
 
 ## Changes from the earlier version
 
